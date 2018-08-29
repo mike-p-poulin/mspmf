@@ -1,37 +1,23 @@
-import os
 import glob
 import time
-import Configuration as Config
 
-class TemperatureSensorController:
-  
+class TemperatureSensorController(object):
 
+    def __init__(self, id, name):
+        self.Id = id
+        self.Name = name        
+        deviceFolder = glob.glob('/sys/bus/w1/devices/' + id)[0]
+        self.W1DeviceFile = deviceFolder + '/w1_slave'
 
-    def __init__(self, config):
+    def Read(self):
+        tempDataLines = self.ReadTemperatureData(self.W1DeviceFile)
 
-        self.W1DeviceFilesById = dict()
-        base_dir ='/sys/bus/w1/devices/'
+        while tempDataLines[0].strip()[-3:] != 'YES':
+            time.sleep(0.2)
+            tempDataLines = self.ReadTemperatureData(self.W1DeviceFile)
 
-        for id, name in config.TemperatureSensors.items():
-            deviceFolder = glob.glob(base_dir + id)[0]
-            deviceFile = deviceFolder + '/w1_slave'
-            self.W1DeviceFilesById[id] = deviceFile
-
-    def ReadTemperatures(self):
-        tempsById = dict()
-
-        for w1DeviceId, w1DeviceFile in self.W1DeviceFilesById.items():
-            
-            tempDataLines = self.ReadTemperatureData(w1DeviceFile)
-
-            while tempDataLines[0].strip()[-3:] != 'YES':
-                time.sleep(0.2)
-                tempDataLines = self.ReadTemperatureData(w1DeviceFile)
-
-            temp = self.ParseTemperatureData(tempDataLines[1])
-            tempsById[w1DeviceId] = temp
-
-        return tempsById
+        temp = self.ParseTemperatureData(tempDataLines[1])
+        return temp
 
     def ReadTemperatureData(self, deviceFile):
             f = open(deviceFile)

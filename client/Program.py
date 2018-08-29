@@ -23,14 +23,14 @@ class Program:
         Logger.LogInfo("\tConfiguring GPIO")
         
 
-        ledName = self.config.LEDs["13"].Name
+        ledName = self.Config.LEDs["13"].Name
         Logger.LogInfo("\tConfiguring Pin 13 (" + ledName + ")")        
         GPIO.setup(13, GPIO.OUT)
 
         while True:
             Logger.LogInfo("\tReading Temperatures")
             temps = self.tempSensorController.ReadTemperatures()
-            targetId = self.config.TemperatureSensors.values()[0].Id
+            targetId = self.Config.TemperatureSensors.values()[0].Id
             temp_c = temps[targetId]
             Logger.LogInfo("\tTemperature " + str(temp_c))
             if temp_c > 27.9:
@@ -41,12 +41,12 @@ class Program:
                 Logger.LogInfo("\tSetting '" + ledName + "' to Off(Low)")
 
             time.sleep(1) 
-
+     
     def Initialize(self):
         Logger.Initialize()     
         Logger.LogInfo ("Loading configuration...")
-        self.config = ConfigurationLoader.Load()
-        Logger.LogInfo(str(self.config), includeTimestamp=False)
+        self.Config = ConfigurationLoader.Load()
+        Logger.LogInfo(str(self.Config), includeTimestamp=False)
         Logger.LogInfo ("Configuration loaded\n-----------------------------------------------\n")
 
         Logger.LogInfo ("Setting GPIO Mode to 'Board' (" + str(GPIO.BOARD) + ")")
@@ -62,18 +62,19 @@ class Program:
         os.system('modprobe w1-therm')
         Logger.LogInfo ("1-wire interface configured\n-----------------------------------------------\n")
 
-        Logger.LogInfo ("Initializaing Thermometers...")
-        self.tempSensorController = TempSensorController.TemperatureSensorController(self.config)
-        temps = self.tempSensorController.ReadTemperatures()
-        for id, temp in temps.items():
-            tempName = self.config.TemperatureSensors[id].Name
-            Logger.LogInfo(tempName + "(" + id + "):  " + str(temp))
+        Logger.LogInfo ("Initializaing Temperature Sensors...")
+        self.TemperatureSensorControllers = dict()
+        for tempSensorConfig in self.Config.TemperatureSensors.values():
+            tempSensorController = TempSensorController.TemperatureSensorController(tempSensorConfig.Id, tempSensorConfig.Name)
+            self.TemperatureSensorControllers[tempSensorConfig.Id] = tempSensorController
+            temp = tempSensorController.Read()
+            Logger.LogInfo(tempSensorConfig.Name + "(" + tempSensorConfig.Id + "):  " + str(temp))
         Logger.LogInfo ("Temperature Sensors initialized\n-----------------------------------------------\n")
 
         Logger.LogInfo("Initializing LEDs")
         self.LEDControllers = dict()
 
-        for ledConfig in self.config.LEDs.values():
+        for ledConfig in self.Config.LEDs.values():
             ledController = LEDController.LEDController(ledConfig.PinNumber, ledConfig.Name)
             self.LEDControllers[ledConfig.PinNumber] = ledController
             ledController.Initialize()
