@@ -13,7 +13,7 @@ class Configuration:
         def __repr__(self):
             name = self.Name
             id = self.Id
-            return "Id = " + id + "\n\tName = " + name
+            return "Id = " + id + ", Name = " + name
     
     class LEDConfiguration:
         def __init__(self, pinNumber, name):
@@ -22,7 +22,7 @@ class Configuration:
         def __repr__(self):
             pin = self.PinNumber
             name = self.Name
-            return "Pin = " + pin + "\n\tName = " + name
+            return "Pin = " + pin + ", Name = " + name
 
     def __init__(self):
         self.Settings = Configuration.SettingsConfiguration()
@@ -36,11 +36,11 @@ class Configuration:
             textLines.append("Settings:\n" + str(self.Settings) + "\n")
 
             textLines.append("\nThermometers:\n")
-            for thermometer in self.Thermometers:
+            for thermometer in self.Thermometers.values():
                 textLines.append("\t" + str(thermometer) + "\n")
 
             textLines.append("\nLEDs:\n")
-            for led in self.LEDs:
+            for led in self.LEDs.values():
                 textLines.append("\t" + str(led) + "\n")
 
             return ''.join(textLines)

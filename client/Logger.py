@@ -9,10 +9,15 @@ def Initialize():
     logFile = logFilePath + '/logs/' + timestr + " output.txt"
     logging.basicConfig(filename=logFile, level=logging.INFO)
 
-def LogInfo(message):
+def LogInfo(message, includeTimestamp = True):
     timeNow = str(datetime.datetime.now())
-    print("[" + timeNow + "] " + message)
-    logging.info("[" + timeNow + "] " + message)
+    if (includeTimestamp):
+        print("[" + timeNow + "] " + message)
+        logging.info("[" + timeNow + "] " + message)
+    else:
+        print(message)
+        logging.info(message)
+    
 
 def LogWarning(message):
     timeNow = str(datetime.datetime.now())
