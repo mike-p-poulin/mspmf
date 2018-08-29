@@ -29,12 +29,17 @@ def LoadPeripherals(config, configData):
     peripherals = configData["peripherals"]
     
     for peripheral in peripherals:
-        if "thermometers" in peripheral:
-            for thermometer in peripheral["thermometers"]:
-                thermometerConfig = Config.Configuration.ThermometerConfiguration(thermometer["id"],thermometer["name"])
-                config.Thermometers[thermometer["id"]] = thermometerConfig
+        if "temperatureSensors" in peripheral:
+            for tempSensor in peripheral["temperatureSensors"]:
+                tempSensorConfig = Config.Configuration.TemperatureSensorConfiguration(tempSensor["id"],tempSensor["name"])
+                config.TemperatureSensors[tempSensor["id"]] = tempSensorConfig
 
-        if "LEDs" in peripheral:
-            for led in peripheral["LEDs"]:
+        if "leds" in peripheral:
+            for led in peripheral["leds"]:
                 ledConfig = Config.Configuration.LEDConfiguration(led["pinNumber"],led["name"])
                 config.LEDs[led["pinNumber"]] = ledConfig              
+        
+        if "moistureSensors" in peripheral:
+            for moistureSensor in peripheral["moistureSensors"]:
+                moistureSensorConfig = Config.Configuration.MoistureSensorConfiguration(moistureSensor["pinNumber"],moistureSensor["name"])
+                config.MoistureSensors[moistureSensor["pinNumber"]] = moistureSensorConfig

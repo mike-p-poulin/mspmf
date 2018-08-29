@@ -3,18 +3,16 @@ import glob
 import time
 import Configuration as Config
 
-class ThermometersController:
+class TemperatureSensorController:
   
 
 
     def __init__(self, config):
-        os.system('modprobe w1-gpio')
-        os.system('modprobe w1-therm')
 
         self.W1DeviceFilesById = dict()
         base_dir ='/sys/bus/w1/devices/'
 
-        for id, name in config.Thermometers.items():
+        for id, name in config.TemperatureSensors.items():
             deviceFolder = glob.glob(base_dir + id)[0]
             deviceFile = deviceFolder + '/w1_slave'
             self.W1DeviceFilesById[id] = deviceFile

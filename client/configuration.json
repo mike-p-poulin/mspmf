@@ -5,12 +5,15 @@
         { "name":"Season", "value":"Summer"}
     ],
     "peripherals":[
-        {"thermometers":[
-            { "id":"28-0113133d29aa", "name":"First Thermometer" },
-            { "id":"28-01131365a3aa", "name":"Second Thermometer" }
+        {"temperatureSensors":[
+            { "id":"28-0113133d29aa", "name":"First Temperature Sensor" },
+            { "id":"28-01131365a3aa", "name":"Second Temperature Sensor" }
         ]},
-        {"LEDs":[
+        {"leds":[
             { "pinNumber":"13", "name":"Fan Running (LED)" }
+        ]},
+        {"moistureSensors":[
+            { "pinNumber":"40", "name":"First Soil Moisture Sensor" }
         ]}
     ],
     "rules":[
