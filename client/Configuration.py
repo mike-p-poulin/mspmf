@@ -25,13 +25,14 @@ class Configuration:
             return "Pin = " + pin + ", Name = " + name
 
     class MoistureSensorConfiguration:
-        def __init__(self, id, name):
-            self.Id = id
+        def __init__(self, pinNumber, name):
+            self.PinNumber = pinNumber
             self.Name = name
         def __repr__(self):
+            pin = self.PinNumber
             name = self.Name
-            id = self.Id
-            return "Pin = " + id + ", Name = " + name
+            return "Pin = " + pin + ", Name = " + name
+
 
     def __init__(self):
         self.Settings = Configuration.SettingsConfiguration()

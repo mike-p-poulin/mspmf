@@ -6,6 +6,7 @@ from RPi import GPIO as GPIO
 import ConfigurationLoader
 import TemperatureSensorController as TempSensorController
 import LEDController
+import MoistureSensorController
 #git config --global credential.helper "cache --timeout=3600"
 class Program:
 
@@ -13,6 +14,11 @@ class Program:
         try:   
             self.Initialize()
             #self.DoX()
+
+            while True:
+                moisture = self.MoistureSensorControllers.values()[0].Read()
+                print(moisture)
+                time.sleep(.5)
 
         except Exception as ex:           
             print(ex.message)     
@@ -67,17 +73,21 @@ class Program:
         for tempSensorConfig in self.Config.TemperatureSensors.values():
             tempSensorController = TempSensorController.TemperatureSensorController(tempSensorConfig.Id, tempSensorConfig.Name)
             self.TemperatureSensorControllers[tempSensorConfig.Id] = tempSensorController
-            temp = tempSensorController.Read()
-            Logger.LogInfo(tempSensorConfig.Name + "(" + tempSensorConfig.Id + "):  " + str(temp))
+            tempSensorController.Initialize()            
         Logger.LogInfo ("Temperature Sensors initialized\n-----------------------------------------------\n")
 
         Logger.LogInfo("Initializing LEDs")
         self.LEDControllers = dict()
-
         for ledConfig in self.Config.LEDs.values():
             ledController = LEDController.LEDController(ledConfig.PinNumber, ledConfig.Name)
             self.LEDControllers[ledConfig.PinNumber] = ledController
-            ledController.Initialize()
-            
-        Logger.LogInfo("LEDs Initialized")
+            ledController.Initialize()            
+        Logger.LogInfo("LEDs Initialized\n-----------------------------------------------\n")
 
+        Logger.LogInfo("Initializing Moisture Sensors")
+        self.MoistureSensorControllers = dict()
+        for moistureSensorConfig in self.Config.MoistureSensors.values():
+            moistureSensorController = MoistureSensorController.MoistureSensorController(moistureSensorConfig.PinNumber, moistureSensorConfig.Name)
+            self.MoistureSensorControllers[moistureSensorConfig.PinNumber] = moistureSensorController
+            moistureSensorController.Initialize()            
+        Logger.LogInfo("Moisture Sensors Initialized\n-----------------------------------------------\n")

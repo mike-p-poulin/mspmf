@@ -1,5 +1,6 @@
 import glob
 import time
+import Logger
 
 class TemperatureSensorController(object):
 
@@ -7,7 +8,7 @@ class TemperatureSensorController(object):
         self.Id = id
         self.Name = name        
         deviceFolder = glob.glob('/sys/bus/w1/devices/' + id)[0]
-        self.W1DeviceFile = deviceFolder + '/w1_slave'
+        self.W1DeviceFile = deviceFolder + '/w1_slave'    
 
     def Read(self):
         tempDataLines = self.ReadTemperatureData(self.W1DeviceFile)
@@ -33,3 +34,7 @@ class TemperatureSensorController(object):
             temp_c = float(temp_string) / 1000.0
             temp_f = temp_c * 9.0 / 5.0 + 32
             return temp_c
+    
+    def Initialize(self):
+        temp = self.Read()
+        Logger.LogInfo(self.Name + "(" + self.Id + "):  " + str(temp))
