@@ -1,0 +1,24 @@
+  
+{
+    "settings":[
+        { "name":"DeviceId", "value":"CA:ON:TORONTO:SCARBOROUGH:ELKWOODDR60:A"},
+        { "name":"Season", "value":"Summer"}
+    ],
+    "peripherals":[
+        {"thermometers":[
+            { "id":"28-0113133d29aa", "name":"First Thermometer" },
+            { "id":"28-01131365a3aa", "name":"Second Thermometer" }
+        ]},
+        {"LEDs":[
+            { "pinNumber":"13", "name":"Fan Running (LED)" }
+        ]}
+    ],
+    "rules":[
+        {"fanRules":[
+            { "name":"StartFanWhenAirTempAboveCelsius(Winter)", "value":"27.900"},
+            { "name":"StopFanWhenAirTempBelowCelsius(Winter)", "value":"27.0"},
+            { "name":"StartFanWhenAirTempAboveCelsius(Summer)", "value":"27.900"},
+            { "name":"StopFanWhenAirTempBelowCelsius(Summer)", "value":"27.0"}
+        ]}
+    ]
+}
