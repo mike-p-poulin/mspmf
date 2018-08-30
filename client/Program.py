@@ -1,4 +1,7 @@
 import os
+import sys
+import select
+import traceback
 import glob
 import Logger
 import time
@@ -6,7 +9,6 @@ from RPi import GPIO as GPIO
 import ConfigurationLoader
 import TemperatureSensorController as TempSensorController
 import LEDController
-import MoistureSensorController
 import PinAssignments
 
 #git config --global credential.helper "cache --timeout=3600"
@@ -15,90 +17,97 @@ class Program:
     def Run(self):
         try:   
             self.Initialize()
-            GPIO.cleanup()          
-            #self.DoX()
+            Logger.LogInfo("Entering main loop")
 
-            #while True:
-            #    moisture = self.MoistureSensorControllers.values()[0].Read()
-            #    print(moisture)
-            #    time.sleep(.5)
+            exitRequested = False
+            while not exitRequested: 
+                self.IndicateHearbeat()
+
+                if select.select([sys.stdin,],[],[],2.0)[0]:
+                    Logger.LogInfo("Exit requested by user")
+                    exitRequested = True
+                else:
+                    x=1
 
         except Exception as ex:           
-            Logger.LogCritical(ex.message)  
+            Logger.LogCritical(ex.message + "\n" + traceback.format_exc()) 
+            Logger.LogCritical("Indicating System Problem")
+            self.IndicateSystemProblem()        
+        finally:
+            Logger.LogInfo("Cleaning up GPIO")
             GPIO.cleanup()          
 
-    def DoX(self):
-        Logger.LogInfo("DoX:")
-        Logger.LogInfo("\tConfiguring GPIO")
-        
-
-        ledName = self.Config.LEDs["13"].Name
-        Logger.LogInfo("\tConfiguring Pin 13 (" + ledName + ")")        
-        GPIO.setup(13, GPIO.OUT)
-
-        while True:
-            Logger.LogInfo("\tReading Temperatures")
-            temps = self.tempSensorController.ReadTemperatures()
-            targetId = self.Config.TemperatureSensors.values()[0].Id
-            temp_c = temps[targetId]
-            Logger.LogInfo("\tTemperature " + str(temp_c))
-            if temp_c > 27.9:
-                Logger.LogInfo("\tSetting '" + ledName + "' to On(High)")
-                GPIO.output(13,GPIO.HIGH)
-            else:                
-                GPIO.output(13,GPIO.LOW)
-                Logger.LogInfo("\tSetting '" + ledName + "' to Off(Low)")
-
-            time.sleep(1) 
      
     def Initialize(self):
-        Logger.Initialize()             
-        Logger.LogInfo ("Loading configuration")
-        self.Config = ConfigurationLoader.Load()
-        Logger.LogInfo(str(self.Config), includeTimestamp=False)
-        Logger.LogInfo ("Configuration loaded\n-----------------------------------------------\n")
+        try:
+            Logger.Initialize()             
+            Logger.LogInfo ("Loading configuration")
+            self.Config = ConfigurationLoader.Load()
+            Logger.LogInfo(str(self.Config), includeTimestamp=False)
+            Logger.LogInfo ("Configuration loaded\n-----------------------------------------------\n")
 
-        Logger.LogInfo("Starting Initialization\n-----------------------------------------------\n")
+            Logger.LogInfo("Starting Initialization\n-----------------------------------------------\n")
 
-        Logger.LogInfo ("Setting GPIO Mode to 'Board' (" + str(GPIO.BOARD) + ")")
-        GPIO.setmode(GPIO.BOARD)
-        Logger.LogInfo ("GPIO Mode Set\n-----------------------------------------------\n")
+            Logger.LogInfo ("Setting GPIO Mode to 'Board' (" + str(GPIO.BOARD) + ")")
+            GPIO.setmode(GPIO.BOARD)
+            Logger.LogInfo ("GPIO Mode Set\n-----------------------------------------------\n")
 
-        Logger.LogInfo ("Disabling GPIO warnings")
-        GPIO.setwarnings(False)
-        Logger.LogInfo ("GPIO warnings disabled\n-----------------------------------------------\n")
+            Logger.LogInfo ("Disabling GPIO warnings")
+            GPIO.setwarnings(False)
+            Logger.LogInfo ("GPIO warnings disabled\n-----------------------------------------------\n")
+
+            Logger.LogInfo("Initializing LEDs")
+            self.LEDControllers = dict()
+            for ledConfig in self.Config.LEDs.values():
+                ledController = LEDController.LEDController(ledConfig.PinNumber, ledConfig.Name)
+                self.LEDControllers[ledConfig.PinNumber] = ledController
+                ledController.Initialize()   
+                Logger.LogInfo("", includeTimestamp = False)        
+            Logger.LogInfo("LEDs Initialized\n-----------------------------------------------\n")
+
+
+            Logger.LogInfo ("Configuring 1-wire interface")
+            os.system('modprobe w1-gpio')
+            os.system('modprobe w1-therm')
+            Logger.LogInfo ("1-wire interface configured\n-----------------------------------------------\n")
+
+            Logger.LogInfo ("Initializaing Temperature Sensors")
+            self.TemperatureSensorControllers = dict()
+            for tempSensorConfig in self.Config.TemperatureSensors.values():
+                tempSensorController = TempSensorController.TemperatureSensorController(tempSensorConfig.Id, tempSensorConfig.Name)
+                self.TemperatureSensorControllers[tempSensorConfig.Id] = tempSensorController
+                tempSensorController.Initialize()            
+                Logger.LogInfo("", includeTimestamp = False)
+            Logger.LogInfo ("Temperature Sensors initialized\n-----------------------------------------------\n")
+                    
+            self.LEDControllers[PinAssignments.PinNumbers.LED_SystemOK.value].TurnOn()
+            Logger.LogInfo("Initialization Complete\n-----------------------------------------------\n")
         
-        Logger.LogInfo ("Configuring 1-wire interface")
-        os.system('modprobe w1-gpio')
-        os.system('modprobe w1-therm')
-        Logger.LogInfo ("1-wire interface configured\n-----------------------------------------------\n")
+        except Exception as ex:           
+            Logger.LogCritical(ex.message + "\n" + traceback.format_exc()) 
+            Logger.LogCritical("Indicating System Problem")
+            self.IndicateSystemProblem()
+           
 
-        Logger.LogInfo ("Initializaing Temperature Sensors")
-        self.TemperatureSensorControllers = dict()
-        for tempSensorConfig in self.Config.TemperatureSensors.values():
-            tempSensorController = TempSensorController.TemperatureSensorController(tempSensorConfig.Id, tempSensorConfig.Name)
-            self.TemperatureSensorControllers[tempSensorConfig.Id] = tempSensorController
-            tempSensorController.Initialize()            
-            Logger.LogInfo("", includeTimestamp = False)
-        Logger.LogInfo ("Temperature Sensors initialized\n-----------------------------------------------\n")
+    def IndicateSystemProblem(self):
+        self.LEDControllers[PinAssignments.PinNumbers.LED_SystemOK.value].TurnOff(silent=True)
 
-        Logger.LogInfo("Initializing LEDs")
-        self.LEDControllers = dict()
-        for ledConfig in self.Config.LEDs.values():
-            ledController = LEDController.LEDController(ledConfig.PinNumber, ledConfig.Name)
-            self.LEDControllers[ledConfig.PinNumber] = ledController
-            ledController.Initialize()   
-            Logger.LogInfo("", includeTimestamp = False)        
-        Logger.LogInfo("LEDs Initialized\n-----------------------------------------------\n")
+        exitRequested = False
+        while not exitRequested:     
+            if select.select([sys.stdin,],[],[],.1)[0]:
+                exitRequested = True
+            
+            self.LEDControllers[PinAssignments.PinNumbers.LED_SystemProblem.value].TurnOn(silent=True)
+            time.sleep(.5)
+            self.LEDControllers[PinAssignments.PinNumbers.LED_SystemProblem.value].TurnOff(silent=True)
+            time.sleep(.5)
 
-        Logger.LogInfo("Initializing Moisture Sensors")
-        self.MoistureSensorControllers = dict()
-        for moistureSensorConfig in self.Config.MoistureSensors.values():
-            moistureSensorController = MoistureSensorController.MoistureSensorController(moistureSensorConfig.PinNumber, moistureSensorConfig.Name)
-            self.MoistureSensorControllers[moistureSensorConfig.PinNumber] = moistureSensorController
-            moistureSensorController.Initialize()  
-            Logger.LogInfo("", includeTimestamp = False)          
-        Logger.LogInfo("Moisture Sensors Initialized\n-----------------------------------------------\n")
-                
-        self.LEDControllers[PinAssignments.PinNumbers.LED_SystemOK.value].TurnOn()
-        Logger.LogInfo("Initialization Complete\n-----------------------------------------------\n")
+    def IndicateHearbeat(self):
+        self.LEDControllers[PinAssignments.PinNumbers.LED_SystemOK.value].TurnOff(silent=True)
+        time.sleep(.3)
+        self.LEDControllers[PinAssignments.PinNumbers.LED_SystemOK.value].TurnOn(silent=True)
+        time.sleep(.3)
+        self.LEDControllers[PinAssignments.PinNumbers.LED_SystemOK.value].TurnOff(silent=True)
+        time.sleep(.3)
+        self.LEDControllers[PinAssignments.PinNumbers.LED_SystemOK.value].TurnOn(silent=True)
+

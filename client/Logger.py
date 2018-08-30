@@ -12,7 +12,7 @@ def Initialize():
 def LogInfo(message, includeTimestamp = True):
     timeNow = str(datetime.datetime.now())
     if (includeTimestamp):
-        print("[" + timeNow + "] " + message)
+        print("[" + timeNow + "-INFO] " + message)
         logging.info("[" + timeNow + "] " + message)
     else:
         print(message)
@@ -21,16 +21,16 @@ def LogInfo(message, includeTimestamp = True):
 
 def LogWarning(message):
     timeNow = str(datetime.datetime.now())
-    print("[" + timeNow + "] " + message)
+    print("[" + timeNow + "-WARNING] " + message)
     logging.warning("[" + timeNow + "] " + message)
 
 def LogError(message):
     timeNow = str(datetime.datetime.now())
-    print("[" + timeNow + "] " + message)
+    print("[" + timeNow + "-ERROR] " + message)
     logging.error("[" + timeNow + "] " + message)
 
 def LogCritical(message):
     timeNow = str(datetime.datetime.now())
-    print("[" + timeNow + "] " + message)
+    print("[" + timeNow + "-CRITICAL] " + message)
     logging.critical("[" + timeNow + "] " + message)
     
