@@ -11,6 +11,7 @@ class TemperatureSensorController(object):
         self.W1DeviceFile = deviceFolder + '/w1_slave'    
 
     def Read(self):
+        Logger.LogInfo("Temp Sensor: Reading '" + self.Name + "' (at " + str(self.Id) + ")")
         tempDataLines = self.ReadTemperatureData(self.W1DeviceFile)
 
         while tempDataLines[0].strip()[-3:] != 'YES':
@@ -18,6 +19,8 @@ class TemperatureSensorController(object):
             tempDataLines = self.ReadTemperatureData(self.W1DeviceFile)
 
         temp = self.ParseTemperatureData(tempDataLines[1])
+
+        Logger.LogInfo("Temp Sensor: Read '" + self.Name + "' (at " + str(self.Id) + "):  " + str(temp))
         return temp
 
     def ReadTemperatureData(self, deviceFile):
@@ -36,5 +39,6 @@ class TemperatureSensorController(object):
             return temp_c
     
     def Initialize(self):
+        Logger.LogInfo("Temp Sensor: Initializating '" + self.Name + "' (at " + str(self.Id) + ")")
         temp = self.Read()
-        Logger.LogInfo(self.Name + "(" + self.Id + "):  " + str(temp))
+        Logger.LogInfo("Temp Sensor: Initialized '" + self.Name + "' (at " + str(self.Id) + ")")

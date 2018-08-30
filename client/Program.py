@@ -7,22 +7,26 @@ import ConfigurationLoader
 import TemperatureSensorController as TempSensorController
 import LEDController
 import MoistureSensorController
+import PinAssignments
+
 #git config --global credential.helper "cache --timeout=3600"
 class Program:
 
     def Run(self):
         try:   
             self.Initialize()
+            GPIO.cleanup()          
             #self.DoX()
 
-            while True:
-                moisture = self.MoistureSensorControllers.values()[0].Read()
-                print(moisture)
-                time.sleep(.5)
+            #while True:
+            #    moisture = self.MoistureSensorControllers.values()[0].Read()
+            #    print(moisture)
+            #    time.sleep(.5)
 
         except Exception as ex:           
             print(ex.message)     
-            Logger.LogCritical(ex.message)            
+            Logger.LogCritical(ex.message)  
+            GPIO.cleanup()          
 
     def DoX(self):
         Logger.LogInfo("DoX:")
@@ -50,7 +54,7 @@ class Program:
      
     def Initialize(self):
         Logger.Initialize()     
-        Logger.LogInfo ("Loading configuration...")
+        Logger.LogInfo ("Loading configuration")
         self.Config = ConfigurationLoader.Load()
         Logger.LogInfo(str(self.Config), includeTimestamp=False)
         Logger.LogInfo ("Configuration loaded\n-----------------------------------------------\n")
@@ -68,12 +72,13 @@ class Program:
         os.system('modprobe w1-therm')
         Logger.LogInfo ("1-wire interface configured\n-----------------------------------------------\n")
 
-        Logger.LogInfo ("Initializaing Temperature Sensors...")
+        Logger.LogInfo ("Initializaing Temperature Sensors")
         self.TemperatureSensorControllers = dict()
         for tempSensorConfig in self.Config.TemperatureSensors.values():
             tempSensorController = TempSensorController.TemperatureSensorController(tempSensorConfig.Id, tempSensorConfig.Name)
             self.TemperatureSensorControllers[tempSensorConfig.Id] = tempSensorController
             tempSensorController.Initialize()            
+            Logger.LogInfo("", includeTimestamp = False)
         Logger.LogInfo ("Temperature Sensors initialized\n-----------------------------------------------\n")
 
         Logger.LogInfo("Initializing LEDs")
@@ -81,7 +86,8 @@ class Program:
         for ledConfig in self.Config.LEDs.values():
             ledController = LEDController.LEDController(ledConfig.PinNumber, ledConfig.Name)
             self.LEDControllers[ledConfig.PinNumber] = ledController
-            ledController.Initialize()            
+            ledController.Initialize()   
+            Logger.LogInfo("", includeTimestamp = False)        
         Logger.LogInfo("LEDs Initialized\n-----------------------------------------------\n")
 
         Logger.LogInfo("Initializing Moisture Sensors")
@@ -89,5 +95,8 @@ class Program:
         for moistureSensorConfig in self.Config.MoistureSensors.values():
             moistureSensorController = MoistureSensorController.MoistureSensorController(moistureSensorConfig.PinNumber, moistureSensorConfig.Name)
             self.MoistureSensorControllers[moistureSensorConfig.PinNumber] = moistureSensorController
-            moistureSensorController.Initialize()            
+            moistureSensorController.Initialize()  
+            Logger.LogInfo("", includeTimestamp = False)          
         Logger.LogInfo("Moisture Sensors Initialized\n-----------------------------------------------\n")
+
+        self.LEDControllers[PinAssignments.PinNumbers.LED_InitializationSucceeded.value].TurnOn()

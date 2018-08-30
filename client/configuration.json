@@ -10,7 +10,7 @@
             { "id":"28-01131365a3aa", "name":"Second Temperature Sensor" }
         ]},
         {"leds":[
-            { "pinNumber":"13", "name":"Fan Running (LED)" }
+            { "pinNumber":"13", "name":"Initialization Succeeded" }
         ]},
         {"moistureSensors":[
             { "pinNumber":"40", "name":"First Soil Moisture Sensor" }
