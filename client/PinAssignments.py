@@ -1,4 +1,4 @@
 from enum import Enum
 
 class PinNumbers(Enum):
-    LED_InitializationSucceeded = u"13"
+    LED_SystemOK = u"13"

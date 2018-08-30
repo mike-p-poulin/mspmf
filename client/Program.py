@@ -24,7 +24,6 @@ class Program:
             #    time.sleep(.5)
 
         except Exception as ex:           
-            print(ex.message)     
             Logger.LogCritical(ex.message)  
             GPIO.cleanup()          
 
@@ -53,11 +52,13 @@ class Program:
             time.sleep(1) 
      
     def Initialize(self):
-        Logger.Initialize()     
+        Logger.Initialize()             
         Logger.LogInfo ("Loading configuration")
         self.Config = ConfigurationLoader.Load()
         Logger.LogInfo(str(self.Config), includeTimestamp=False)
         Logger.LogInfo ("Configuration loaded\n-----------------------------------------------\n")
+
+        Logger.LogInfo("Starting Initialization\n-----------------------------------------------\n")
 
         Logger.LogInfo ("Setting GPIO Mode to 'Board' (" + str(GPIO.BOARD) + ")")
         GPIO.setmode(GPIO.BOARD)
@@ -98,5 +99,6 @@ class Program:
             moistureSensorController.Initialize()  
             Logger.LogInfo("", includeTimestamp = False)          
         Logger.LogInfo("Moisture Sensors Initialized\n-----------------------------------------------\n")
-
-        self.LEDControllers[PinAssignments.PinNumbers.LED_InitializationSucceeded.value].TurnOn()
+                
+        self.LEDControllers[PinAssignments.PinNumbers.LED_SystemOK.value].TurnOn()
+        Logger.LogInfo("Initialization Complete\n-----------------------------------------------\n")
